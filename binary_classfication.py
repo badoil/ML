@@ -43,8 +43,9 @@ data_torch = torch.tensor(data, dtype=torch.float32)
 labels_torch = torch.tensor(labels, dtype=torch.float32)
 
 print(f"before, one hot : {labels_torch.shape}")
-labels_torch = F.one_hot(labels_torch)
-print(f"after, one hot : {labels_torch.shape}")
+# 밑에서 torch가 제공해주는 nn.CrossEntropyLoss() 사용하면 one hot encoding 노필요
+# labels_torch = F.one_hot(labels_torch)
+# print(f"after, one hot : {labels_torch.shape}")
 
 data_length = len(data_torch)
 split_length = int(0.8*data_length)
@@ -117,6 +118,7 @@ class Net(nn.Module):
 
 net = Net()
 optimizer = optim.SGD(net.parameters(), lr=0.01)
+loss_fn = nn.CrossEntropyLoss()
 
 
 # Net 클래스로 뉴럴네트워크를 만들기에 아래는 노필요
@@ -129,6 +131,15 @@ optimizer = optim.SGD(net.parameters(), lr=0.01)
 #     p.requires_grad = True
 
 for steps in range(200000):
+    # 아래는 Net 클래스 없이 뉴럴 네트워크를 형성
+    # data_batch, labels_batch = get_batch(train_data,train_labels, batch_size=256)
+    # tmp = data_batch@W1 + b1
+    # tmp = F.relu(tmp)
+    # output = tmp@W2 + b2
+    # prob = torch.sigmoid(output)
+    # loss = -1 * (labels_batch * torch.log(prob) + (1 - labels_batch) * torch.log(1 - prob)).mean()
+    # 위의 loss 가 logistic regression 의 loss function 인 NLL(negative log-likelihood) 임!!!
+    
     net.train() # train 모드로 바꿈
     data_batch, labels_batch = get_batch(train_data,train_labels, batch_size=256)
     output = net(data_batch)
@@ -139,8 +150,8 @@ for steps in range(200000):
     # output = tmp@W2 + b2
     #prob = torch.sigmoid(output)
     
-    loss = custom_cross_entropy_loss(output, labels_batch)
-    # 로스함수를 대체
+    loss = loss_fn(output, labels_batch) # 로스함수를 torch가 제공해주는 nn.CrossEntropyLoss() 사용하면 one hot encoding도 노필요
+    # loss = custom_cross_entropy_loss(output, labels_batch) # 로스함수를 대체
     # loss = -1 * (labels_batch * torch.log(prob) + (1 - labels_batch) * torch.log(1 - prob)).mean()
 
 
